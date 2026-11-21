@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>STARLIGHT STATION — Spot the Difference</title>
+<style>
+  :root { --bg:#0b1026; --panel:#131a3a; --panel2:#1a2350; --gold:#f5b301; --gold2:#ffd34d;
+    --ink:#eef1ff; --muted:#9aa7d6; --red:#ff4d5e; --green:#2fd67a; --cyan:#37c8e8; }
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; background:var(--bg); color:var(--ink);
+    font-family:"Segoe UI", system-ui, -apple-system, Arial, sans-serif; }
+  body { min-height:100vh; }
+  .wrap { max-width:1280px; margin:0 auto; padding:10px 18px 26px; }
+  header { display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+  .logo { font-size:30px; line-height:1; }
+  h1 { font-size:26px; margin:0; letter-spacing:.5px; }
+  h1 small { color:var(--gold2); font-size:15px; display:block; letter-spacing:1px; }
+  .pills { display:flex; gap:8px; margin-left:auto; flex-wrap:wrap; align-items:center; }
+  .pill { background:var(--panel2); border:1px solid #2b3768; border-radius:999px;
+    padding:6px 12px; font-size:13px; font-weight:600; white-space:nowrap; }
+  .pill b { color:var(--gold2); }
+  .pill.red { background:#5c1620; border-color:#8a2432; color:#ffd9dd; }
+  .pill.green { background:#0d3d24; border-color:#1d6b40; color:#c9f5da; }
+  .pill.gold { background:#4d3803; border-color:#8a6408; color:#ffe9a8; }
+  .bar { height:10px; background:#1c2450; border-radius:99px; margin:10px 0 12px; overflow:hidden;
+    border:1px solid #2b3768; }
+  .bar > div { height:100%; width:100%; border-radius:99px;
+    background:linear-gradient(90deg, var(--green), var(--gold2) 60%, var(--red)); transition:width .3s linear; }
+  .stage { display:flex; gap:18px; align-items:flex-start; justify-content:center; position:relative; }
+  .panel { flex:1; max-width:600px; }
+  .panel h2 { font-size:12px; letter-spacing:2px; color:var(--muted); text-align:center; margin:0 0 6px;
+    text-transform:uppercase; }
+  .panel h2 b { color:var(--ink); }
+  canvas.scene { width:100%; height:auto; display:block; border-radius:12px; cursor:crosshair;
+    border:3px solid #2b3768; background:#0a0e22; }
+  canvas.scene.active { border-color:var(--gold); }
+  .cap { text-align:center; color:var(--muted); font-size:12.5px; margin:7px 0 0; }
+  .vs { align-self:center; background:var(--gold); color:#241a00; font-weight:800; border-radius:50%;
+    width:44px; height:44px; display:flex; align-items:center; justify-content:center; font-size:14px;
+    flex:0 0 44px; box-shadow:0 0 0 5px rgba(245,179,1,.18); margin-top:26px; }
+  .foundline { text-align:center; margin:12px 0 4px; color:var(--muted); font-size:14px; }
+  .dots { display:inline-flex; gap:7px; vertical-align:middle; margin-left:8px; }
+  .dots span { width:17px; height:17px; border-radius:50%; border:2px solid #55619b; display:inline-flex;
+    align-items:center; justify-content:center; font-size:11px; color:#062b16; background:transparent; }
+  .dots span.on { background:var(--green); border-color:var(--green); font-weight:800; }
+  .controls { display:flex; gap:10px; justify-content:center; margin:12px 0 4px; flex-wrap:wrap; }
+  button { background:var(--gold); color:#241a00; border:none; border-radius:999px; padding:9px 18px;
+    font-size:14px; font-weight:700; cursor:pointer; }
+  button:hover { background:var(--gold2); }
+  button.ghost { background:var(--panel2); color:var(--ink); border:1px solid #2b3768; }
+  button.ghost:hover { background:#232c5e; }
+  button:disabled { opacity:.45; cursor:default; }
+  .help { text-align:center; color:var(--muted); font-size:12.5px; margin:8px 0 0; }
+  .help b { color:var(--ink); }
+  .levels { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin:12px 0 0; }
+  .levels button { background:#1a2350; color:var(--ink); border:1px solid #2b3768; padding:7px 13px; font-size:13px; }
+  .levels button.on { background:var(--gold); color:#241a00; border-color:var(--gold); }
+  .tagline { text-align:center; color:var(--muted); font-size:13px; margin:14px 0 0; }
+  .howto { margin:16px auto 0; max-width:900px; background:var(--panel); border:1px solid #2b3768;
+    border-radius:12px; padding:14px 18px; }
+  .howto h3 { margin:0 0 6px; color:var(--gold2); font-size:15px; }
+  .howto p { margin:0; color:#c6cfee; font-size:13.5px; line-height:1.55; }
+  .overlay { position:fixed; inset:0; background:rgba(5,8,22,.82); display:none; align-items:center;
+    justify-content:center; z-index:20; }
+  .overlay.show { display:flex; }
+  .card { background:var(--panel); border:1px solid #33407c; border-radius:16px; padding:26px 30px;
+    max-width:520px; text-align:center; box-shadow:0 18px 60px rgba(0,0,0,.55); }
+  .card h2 { margin:0 0 8px; font-size:26px; color:var(--gold2); }
+  .card p { color:#c6cfee; line-height:1.55; font-size:14.5px; }
+  .card .row { display:flex; gap:10px; justify-content:center; margin-top:16px; flex-wrap:wrap; }
+  .lens { position:fixed; width:150px; height:150px; border-radius:50%; border:3px solid var(--gold);
+    box-shadow:0 0 0 4px rgba(245,179,1,.25), 0 10px 30px rgba(0,0,0,.6); pointer-events:none;
+    display:none; z-index:15; background:#0a0e22; }
+  #status { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo" aria-hidden="true">&#128269;</div>
+    <h1>STARLIGHT STATION <small>Spot the Difference &mdash; 6 scenes &middot; 50 fair differences</small></h1>
+    <div class="pills">
+      <span class="pill gold" id="pill-level">Level 1 &mdash; Command Deck</span>
+      <span class="pill red" id="pill-left">9 left</span>
+      <span class="pill" id="pill-found">0 / 9 found</span>
+      <span class="pill">Score <b id="pill-score">0</b></span>
+      <span class="pill green" id="pill-streak">Streak &times;0</span>
+      <span class="pill" id="pill-time">&#9200; 2:00</span>
+    </div>
+  </header>
+  <div class="bar"><div id="timebar"></div></div>
+
+  <div class="stage">
+    <div class="panel">
+      <h2><b>Left</b> &mdash; Original</h2>
+      <canvas id="left" class="scene active" width="640" height="400" aria-label="Original picture"></canvas>
+      <p class="cap">Original</p>
+    </div>
+    <div class="vs">VS</div>
+    <div class="panel">
+      <h2><b>Right</b> &mdash; Spot the changes</h2>
+      <canvas id="right" class="scene" width="640" height="400" aria-label="Changed picture"></canvas>
+      <p class="cap">Changed &mdash; click a difference on either picture</p>
+    </div>
+  </div>
+
+  <p class="foundline">Found: <span class="dots" id="dots"></span> <span id="found-text"></span></p>
+
+  <div class="controls">
+    <button id="btn-hint">Hint (3)</button>
+    <button id="btn-pause" class="ghost">Pause</button>
+    <button id="btn-restart" class="ghost">Restart level</button>
+    <button id="btn-levels" class="ghost">Levels</button>
+    <button id="btn-sound" class="ghost">Sound on</button>
+  </div>
+
+  <p class="help">Mouse: click to guess &middot; hover = magnifier &middot; Keys: <b>&larr; &uarr; &darr; &rarr;</b> crosshair &middot;
+    <b>Enter</b> guess &middot; <b>Tab</b> switch picture &middot; <b>H</b> hint &middot; <b>L</b> levels &middot; <b>N</b> next &middot;
+    <b>R</b> restart &middot; <b>P</b> pause &middot; <b>M</b> sound &middot; <b>1&ndash;6</b> level</p>
+
+  <div class="levels" id="levels"></div>
+
+  <p class="tagline">6 scenes &middot; 50 sneaky shifts in all &mdash; every difference is fair: removed, recoloured, moved, resized, flipped or added.</p>
+
+  <div class="howto">
+    <h3>How to play</h3>
+    <p>Two pictures look the same &mdash; but the right one has sneaky shifts: things removed, recoloured,
+    moved, resized, flipped or added. Click a difference on <i>either</i> picture to ring it. Wrong guesses
+    cost 5 seconds and break your streak. Find them all before the timer bar empties. Six station rooms get
+    denser and sneakier: a command deck, a hydroponics bay, an airlock corridor, an observation dome, an
+    engine room and a cargo hold.</p>
+  </div>
+</div>
+
+<canvas id="lens" class="lens" width="300" height="300"></canvas>
+<p id="status" role="status" aria-live="polite"></p>
+
+<div class="overlay" id="ov-title"><div class="card">
+  <h2>STARLIGHT STATION</h2>
+  <p>Welcome aboard, cadet. Six rooms of the station. Fifty differences hiding in plain sight.
+  Ring them all before the air runs out &mdash; 2 minutes a room. Pick a room below or press Enter to start on the Command Deck.</p>
+  <div class="row"><button id="btn-start">Start &mdash; Command Deck</button></div>
+</div></div>
+
+<div class="overlay" id="ov-pause"><div class="card">
+  <h2>Paused</h2><p>Take a breath, cadet. The station will wait. The timer is frozen.</p>
+  <div class="row"><button id="btn-resume">Resume</button><button id="btn-restart2" class="ghost">Restart level</button></div>
+</div></div>
+
+<div class="overlay" id="ov-clear"><div class="card">
+  <h2 id="clear-title">Scene Clear!</h2><p id="clear-text"></p>
+  <div class="row"><button id="btn-next">Next scene</button><button id="btn-replay" class="ghost">Replay level</button></div>
+</div></div>
+
+<div class="overlay" id="ov-time"><div class="card">
+  <h2>Time up!</h2><p id="time-text"></p>
+  <div class="row"><button id="btn-retry">Retry level</button><button id="btn-levels2" class="ghost">Pick a level</button></div>
+</div></div>
+
+<div class="overlay" id="ov-win"><div class="card">
+  <h2>ALL 6 SCENES CLEAR!</h2><p id="win-text"></p>
+  <div class="row"><button id="btn-again">Play again</button></div>
+</div></div>
+
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>
